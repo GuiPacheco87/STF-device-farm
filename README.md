@@ -81,6 +81,29 @@ sudo docker compose down
 
 `docker compose down` mantém o volume do RethinkDB. Para apagar os dados persistentes, isso exige remover explicitamente o volume e deve ser tratado como operação destrutiva.
 
+## Recuperação automática do ADB
+
+O timer systemd opcional em `monitoring/` consulta o serial configurado a cada 20 segundos. Depois de observar o aparelho como `device`, aguarda 45 segundos sem esse estado e recria `adb` e `provider` uma vez. Após uma tentativa, espera o aparelho voltar antes de rearmar, evitando ciclos de reinicialização quando o cabo está desconectado ou o ADB está bloqueado.
+
+Requisitos: systemd no host, Docker Compose funcionando e acesso administrativo ao Docker. Instale informando o serial ADB do aparelho (consulte com `sudo docker compose exec adb adb devices -l`):
+
+```bash
+sudo bash ./monitoring/install.sh SERIAL_ADB_DO_APARELHO
+sudo systemctl status device-farm-adb-monitor.timer
+sudo journalctl -u device-farm-adb-monitor.service
+```
+
+O serial fica em `/etc/default/device-farm-adb-monitor`, fora do repositório. O monitor não altera configurações do Samsung nem contorna o Bloqueador automático. Se o serial deixar de aparecer como `device`, ele tenta uma recuperação e aguarda o aparelho voltar.
+
+Para remover:
+
+```bash
+sudo systemctl disable --now device-farm-adb-monitor.timer
+sudo rm -f /etc/systemd/system/device-farm-adb-monitor.service /etc/systemd/system/device-farm-adb-monitor.timer /etc/default/device-farm-adb-monitor
+sudo rm -rf /usr/local/libexec/device-farm-adb-monitor /var/lib/device-farm-adb-monitor
+sudo systemctl daemon-reload
+```
+
 ## Segurança e uso autorizado
 
 - Todas as portas publicadas são vinculadas a `127.0.0.1`; não altere para `0.0.0.0` sem implementar autenticação real, TLS e controles de rede.
@@ -88,6 +111,7 @@ sudo docker compose down
 - O container ADB roda com `privileged: true` e acesso ao barramento USB para operar aparelhos. A imagem DeviceFarmer ADB inclui uma chave RSA; restrinja o host e os aparelhos a pessoas autorizadas.
 - O STF transmite a tela, permite controle remoto e acesso a informações do aparelho. Use aparelhos e contas de teste aprovados. Não colete, copie ou retenha SMS, OTPs, senhas, tokens ou dados pessoais.
 - Defina um processo operacional para limpar os aparelhos e encerrar sessões entre testes.
+- O monitor systemd roda como root e pode recriar serviços Docker. Instale-o somente se essa recuperação automática for desejada.
 
 ## Versões
 
@@ -99,4 +123,5 @@ O Compose fixa STF em `devicefarmer/stf:3.7.9`, RethinkDB em `2.4.2` e Nginx em 
 - `docker/compose/nginx.conf`: roteamento das rotas HTTP e websocket aos serviços STF.
 - `.env.example`: modelo de configuração sem credenciais.
 - `prepare-host.sh`: instalação opcional das ferramentas do host.
+- `monitoring/`: timer systemd opcional para recuperação de ADB.
 - `ARCHITECTURE.md`: desenho e descrição da arquitetura.

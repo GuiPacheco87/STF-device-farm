@@ -104,6 +104,33 @@ sudo rm -rf /usr/local/libexec/device-farm-adb-monitor /var/lib/device-farm-adb-
 sudo systemctl daemon-reload
 ```
 
+### Monitor universal (opcional)
+
+Como alternativa independente ao monitor por serial, o monitor universal acompanha todos os aparelhos que o ADB do contêiner detectar como `device`. Ele só passa a monitorar um aparelho depois da primeira detecção bem-sucedida, espera 45 segundos de desconexão persistente e tenta recriar `adb` e `provider` uma vez até o aparelho voltar. Se vários aparelhos caírem juntos, uma única recriação atende a todos os que estiverem offline naquele momento. Aparelhos adicionados depois passam a ser acompanhados automaticamente.
+
+Instale separadamente, sem remover o monitor por serial:
+
+```bash
+sudo bash ./monitoring/install-universal.sh
+sudo systemctl status device-farm-adb-monitor-universal.timer
+sudo journalctl -u device-farm-adb-monitor-universal.service
+```
+
+Os dois timers podem coexistir, mas ambos podem recriar os mesmos serviços se observarem a mesma queda simultaneamente. Para usar somente o universal, desative o timer específico por serial:
+
+```bash
+sudo systemctl disable --now device-farm-adb-monitor.timer
+```
+
+Para remover apenas o monitor universal:
+
+```bash
+sudo systemctl disable --now device-farm-adb-monitor-universal.timer
+sudo rm -f /etc/systemd/system/device-farm-adb-monitor-universal.service /etc/systemd/system/device-farm-adb-monitor-universal.timer /etc/default/device-farm-adb-monitor-universal
+sudo rm -rf /usr/local/libexec/device-farm-adb-monitor-universal /var/lib/device-farm-adb-monitor-universal
+sudo systemctl daemon-reload
+```
+
 ## Segurança e uso autorizado
 
 - Todas as portas publicadas são vinculadas a `127.0.0.1`; não altere para `0.0.0.0` sem implementar autenticação real, TLS e controles de rede.

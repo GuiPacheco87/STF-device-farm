@@ -1,0 +1,13 @@
+[Unit]
+Description=Recover DeviceFarmer ADB after a persistent USB disconnect
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+EnvironmentFile=/etc/default/device-farm-adb-monitor
+StateDirectory=device-farm-adb-monitor
+StateDirectoryMode=0750
+ExecStart=/usr/local/libexec/device-farm-adb-monitor/adb-monitor.sh

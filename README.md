@@ -83,7 +83,7 @@ sudo docker compose down
 
 ## Segurança e uso autorizado
 
-- Todos os ports publicados são vinculados a `127.0.0.1`; não altere para `0.0.0.0` sem implementar autenticação real, TLS e controles de rede.
+- Todas as portas publicadas são vinculadas a `127.0.0.1`; não altere para `0.0.0.0` sem implementar autenticação real, TLS e controles de rede.
 - `auth-mock` é somente para uma pessoa no próprio host. Qualquer pessoa com acesso local ao painel pode se identificar como qualquer nome/e-mail.
 - O container ADB roda com `privileged: true` e acesso ao barramento USB para operar aparelhos. A imagem DeviceFarmer ADB inclui uma chave RSA; restrinja o host e os aparelhos a pessoas autorizadas.
 - O STF transmite a tela, permite controle remoto e acesso a informações do aparelho. Use aparelhos e contas de teste aprovados. Não colete, copie ou retenha SMS, OTPs, senhas, tokens ou dados pessoais.
